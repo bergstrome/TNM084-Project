@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://bgqo0olt5x3r3"]
+
+[ext_resource type="Script" path="res://character_body_2d.gd" id="1_54h8h"]
+[ext_resource type="Script" path="res://MazeManager.gd" id="1_fg2ck"]
+[ext_resource type="Texture2D" uid="uid://bm3ypl66xufkn" path="res://icon.svg" id="1_skn3r"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2f6vj"]
+radius = 29.1548
+
+[node name="MazeManger" type="Node2D"]
+position = Vector2(0, 1)
+script = ExtResource("1_fg2ck")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(40, 36)
+script = ExtResource("1_54h8h")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+position = Vector2(3, 1)
+scale = Vector2(0.390625, 0.40625)
+texture = ExtResource("1_skn3r")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+position = Vector2(2, -1)
+shape = SubResource("CircleShape2D_2f6vj")
