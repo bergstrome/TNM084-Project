@@ -15,5 +15,5 @@ buffer = PackedFloat32Array(-0.0048279, -0.00225819, 0.00962247, -0.383001, 7.61
 skeleton = NodePath("../..")
 
 [node name="MultiMeshInstance3D" type="MultiMeshInstance3D" parent="."]
-visible = false
+visibility_range_end = 5.0
 multimesh = SubResource("MultiMesh_3cdhy")
