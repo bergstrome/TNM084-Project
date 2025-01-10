@@ -12,7 +12,7 @@ var hedge = preload("res://hedge2.tscn")
 
 # Initiates an array of zeros, depending on the desired
 # size of the maze
-func vertical_row_init():
+func vertical_row_init() -> Array:
 	var vertical_row = []
 	for i in range(2*maze_size-1):
 		vertical_row.append(0)
@@ -20,7 +20,7 @@ func vertical_row_init():
 
 # Generates the whole maze, row by row, by generating each row
 # (helper functions) according to Eller's algorithm
-func generateMaze():
+func generateMaze() -> void:
 	maze.clear()
 	
 	#var filler_row = vertical_row_init()
@@ -50,13 +50,16 @@ func generateMaze():
 	maze[maze.size()/2 - 1][0] = 0
 	maze[maze.size()/2- 1][maze[maze.size()/2].size()-1] = 0
 	
+	print(maze_length_x)
+	print(maze_length_z)
+	
 	return
 
 # Helper function to generate a row which has vertical walls
-func create_vertical_walls(cellRow,sets):
+func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
 	var startIndex = 0
 	var vertical_walls = vertical_row_init().duplicate(true)
-	#Skapa höger väggar för första raden
+	#Skapa vertikala väggar för första raden
 	for i in range(cellRow.size() - 1):
 		var same_set = false
 		var isWall = rng.randf_range(0.0, 1.0)
@@ -68,30 +71,18 @@ func create_vertical_walls(cellRow,sets):
 		if isWall > 0.5:
 			maze.back()[2*i + 1] = 1
 			vertical_walls[2*i + 1] = 1
-			#Skall inte lägga till ifall setet redan finns
-			#Setet måste uppdateras ifall en vägg läggs ut
-			#Måste använda seten från den tidigare för att
-			#assigna cell id:n
-			#Det kommer kanske lösa vetikala linjer
+			
 			if !same_set:
 				sets.append([startIndex, i])
 				startIndex = i+1
 			else:
 				cellRow[i+1] = cell1
 		else:
-			if cell1 <= cell2:
-				for e in range(cellRow.size()):
-					if cellRow[e] == cell2:
-						cellRow[e] = cell1
-			
-			else:
-				for e in range(cellRow.size()):
-					if cellRow[e] == cell1:
-						cellRow[e] = cell2
+			merge_sets(cellRow,cell1,cell2)
+
 	
 	if cellRow[0] != cellRow[cellRow.size()-1]:
 		sets.append([startIndex, cellRow.size()-1])
-	
 	
 	if sets.size() == 0:
 		sets.append([0,cellRow.size()-1])
@@ -100,7 +91,7 @@ func create_vertical_walls(cellRow,sets):
 	return vertical_walls
 
 # Helper function to generate a row which has horizontal walls
-func create_horizontal_walls(vertical_walls, sets):
+func create_horizontal_walls(vertical_walls: Array, sets: Array) -> Array:
 	#Skapar horisontella väggar
 	var horizontal_walls = vertical_walls.duplicate(true)
 	for i in range(sets.size()):
@@ -121,8 +112,15 @@ func create_horizontal_walls(vertical_walls, sets):
 	
 	return horizontal_walls
 
+# Function to assign the set of each cell in set2 to set1,
+# called when two sets are connected
+func merge_sets(cell_row: Array, set1: int, set2: int):
+	for e in range(cell_row.size()):
+					if cell_row[e] == set2:
+						cell_row[e] = set1
+
 # Helper function to generate the first row
-func generateFirstRow():
+func generateFirstRow() -> Array:
 	var sets = []
 	var cellRow = range(1,maze_size+1)
 	
@@ -131,11 +129,12 @@ func generateFirstRow():
 	
 	maze.append(vertical_walls)
 	maze.append(horizontal_walls)
+	
 	return cellRow
 
 # Helper function to generate all rows in between the
 # first and last row
-func generateRow(prev_cellRow):
+func generateRow(prev_cellRow: Array) -> Array:
 	var sets = []
 	var cellRow = prev_cellRow.duplicate(true)
 	var prevDownWalls = maze.back()
@@ -154,7 +153,8 @@ func generateRow(prev_cellRow):
 	return cellRow
 
 # Helper function to generate the last row
-func generateLastRow(prev_cellRow):
+func generateLastRow(prev_cellRow: Array) -> Array:
+	#remove last row which is horizontal lines
 	maze.pop_back()
 	var cell1
 	var cell2
@@ -162,15 +162,16 @@ func generateLastRow(prev_cellRow):
 	for i in range(prev_cellRow.size()-1):
 		cell1 = prev_cellRow[i]
 		cell2 = prev_cellRow[i+1]
-		
+
 		if cell1 != cell2:
 			maze.back()[2*i+1] = 0
+			merge_sets(prev_cellRow,cell1,cell2)
 	
 	return prev_cellRow
 
 # Reads the new generated maze and calls inst() to instantiate
 # walls at desired places (all 1:s in the maze variable)
-func load_chunk():
+func load_chunk() -> void:
 	for z in range(maze.size()):  # Loop over rows (z is the index for rows)
 		for x in range(maze[z].size()):  # Loop over columns (x is the index for columns)
 			if maze[z][x] == 1:
@@ -180,7 +181,7 @@ func load_chunk():
 	return
 
 # Instatiates a copy of the object representing a wall
-func inst(pos):
+func inst(pos: Vector3) -> void:
 	var instance = hedge.instantiate()
 	instance.position = pos
 	instance.add_to_group("Walls")
@@ -223,7 +224,7 @@ func _process(delta: float) -> void:
 
 # Called for each frame, updates the players position and changes
 # maze_center variable if a new maze should be generated
-func update_position(pos):
+func update_position(pos: Vector3) -> Vector3:
 	var char_pos = pos
 	var Lx = Vector3(0,0,0)
 	var Lz = Vector3(0,0,0)
