@@ -30,10 +30,13 @@ func generateMaze():
 	maze.append([1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1])
 	#maze.append(filler_row)
 	var cellRow = generateFirstRow()
+	print(cellRow)
 	
 	for i in range(maze_size):
 		cellRow = generateRow(cellRow)
+		print(cellRow)
 	cellRow = generateLastRow(cellRow) 
+	print(cellRow)
 	
 	#maze.append(filler_row)
 	for i in range(maze.size()):
@@ -66,17 +69,33 @@ func create_vertical_walls(cellRow,sets):
 			maze.back()[2*i + 1] = 1
 			vertical_walls[2*i + 1] = 1
 			#Skall inte lägga till ifall setet redan finns
-			if !same_set || sets.size() == 0:
+			#Setet måste uppdateras ifall en vägg läggs ut
+			#Måste använda seten från den tidigare för att
+			#assigna cell id:n
+			#Det kommer kanske lösa vetikala linjer
+			if !same_set:
 				sets.append([startIndex, i])
 				startIndex = i+1
+			else:
+				cellRow[i+1] = cell1
 		else:
 			if cell1 <= cell2:
-				cellRow[i+1] = cell1
+				for e in range(cellRow.size()):
+					if cellRow[e] == cell2:
+						cellRow[e] = cell1
+			
 			else:
-				cellRow[i] = cell2
+				for e in range(cellRow.size()):
+					if cellRow[e] == cell1:
+						cellRow[e] = cell2
 	
 	if cellRow[0] != cellRow[cellRow.size()-1]:
 		sets.append([startIndex, cellRow.size()-1])
+	
+	
+	if sets.size() == 0:
+		sets.append([0,cellRow.size()-1])
+	print(sets)
 	
 	return vertical_walls
 
@@ -87,7 +106,7 @@ func create_horizontal_walls(vertical_walls, sets):
 	for i in range(sets.size()):
 		var set = sets[i]
 		var max_walls = set[1] - set[0]
-		var num_walls = rng.randi_range(max_walls,max_walls)
+		var num_walls = rng.randi_range(0, max_walls)
 		
 		var intermidiate_array = range(set[0], set[1] + 1)
 		
@@ -106,7 +125,6 @@ func create_horizontal_walls(vertical_walls, sets):
 func generateFirstRow():
 	var sets = []
 	var cellRow = range(1,maze_size+1)
-	print(cellRow)
 	
 	var vertical_walls = create_vertical_walls(cellRow,sets)
 	var horizontal_walls = create_horizontal_walls(vertical_walls, sets)
@@ -121,11 +139,10 @@ func generateRow(prev_cellRow):
 	var sets = []
 	var cellRow = prev_cellRow.duplicate(true)
 	var prevDownWalls = maze.back()
-	
 	#Skapar nya sets av de celler som har en vägg över
 	for i in range(prev_cellRow.size()):
+		maxSetNum += 1
 		if prevDownWalls[2*i] == 1:
-			maxSetNum += 1
 			cellRow[i] = maxSetNum
 	
 	var vertical_walls = create_vertical_walls(cellRow,sets)
