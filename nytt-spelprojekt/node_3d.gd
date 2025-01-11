@@ -30,13 +30,10 @@ func generateMaze() -> void:
 	maze.append([1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1])
 	#maze.append(filler_row)
 	var cellRow = generateFirstRow()
-	print(cellRow)
 	
 	for i in range(maze_size):
 		cellRow = generateRow(cellRow)
-		print(cellRow)
 	cellRow = generateLastRow(cellRow) 
-	print(cellRow)
 	
 	#maze.append(filler_row)
 	for i in range(maze.size()):
@@ -50,9 +47,6 @@ func generateMaze() -> void:
 	maze[maze.size()/2 - 1][0] = 0
 	maze[maze.size()/2- 1][maze[maze.size()/2].size()-1] = 0
 	
-	print(maze_length_x)
-	print(maze_length_z)
-	
 	return
 
 # Helper function to generate a row which has vertical walls
@@ -62,13 +56,13 @@ func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
 	#Skapa vertikala väggar för första raden
 	for i in range(cellRow.size() - 1):
 		var same_set = false
-		var isWall = rng.randf_range(0.0, 1.0)
-		var cell1 = cellRow[i]
-		var cell2 = cellRow[i + 1]
-		if cell1 == cell2:
-			isWall = 1
+		var gen_wall = rng.randf_range(0.0, 1.0)
+		var cell_l = cellRow[i]
+		var cell_r = cellRow[i + 1]
+		if cell_l == cell_r:
+			gen_wall = 1
 			same_set = true
-		if isWall > 0.5:
+		if gen_wall > 0.5:
 			maze.back()[2*i + 1] = 1
 			vertical_walls[2*i + 1] = 1
 			
@@ -76,39 +70,57 @@ func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
 				sets.append([startIndex, i])
 				startIndex = i+1
 			else:
-				cellRow[i+1] = cell1
+				cellRow[i+1] = cell_l
 		else:
-			merge_sets(cellRow,cell1,cell2)
-
+			merge_sets(cellRow,cell_l,cell_r)
 	
 	if cellRow[0] != cellRow[cellRow.size()-1]:
 		sets.append([startIndex, cellRow.size()-1])
 	
 	if sets.size() == 0:
 		sets.append([0,cellRow.size()-1])
-	print(sets)
 	
 	return vertical_walls
 
 # Helper function to generate a row which has horizontal walls
-func create_horizontal_walls(vertical_walls: Array, sets: Array) -> Array:
+func create_horizontal_walls(vertical_walls: Array, sets: Array, cellRow: Array) -> Array:
 	#Skapar horisontella väggar
 	var horizontal_walls = vertical_walls.duplicate(true)
+	#print(sets)
+	sets.clear()
+	var index_map = {}
+	
+	#ingen aning vad som sker här, tilldelar rätt index till rätt set
+	############################################################################
+	# Group indexes of the same element
+	for i in range(cellRow.size()):
+		var value = cellRow[i]
+		# Check if the value is already in the dictionary
+		if not index_map.has(value):
+			index_map[value] = []  # Create a new list if it doesn't exist
+		index_map[value].append(i)  # Append the index to the list
+
+	# Collect all grouped indexes into sets
+	for value in index_map.keys():
+		sets.append(index_map[value])
+	############################################################################
+	
 	for i in range(sets.size()):
 		var set = sets[i]
-		var max_walls = set[1] - set[0]
+		var max_walls = set.size() - 1
 		var num_walls = rng.randi_range(0, max_walls)
 		
-		var intermidiate_array = range(set[0], set[1] + 1)
-		
 		for j in range(0, num_walls):
-			var index = rng.randi_range(0, intermidiate_array.size() - 1)
-			if 2*intermidiate_array[index]-1 > 0:
-				horizontal_walls[2*intermidiate_array[index]-1] = 1
-			horizontal_walls[2*intermidiate_array[index]] = 1
-			if 2*intermidiate_array[index]+1 < horizontal_walls.size() - 1:
-				horizontal_walls[2*intermidiate_array[index]+1] = 1
-			intermidiate_array.remove_at(index)
+			var index = rng.randi_range(0, set.size() - 1)
+			
+			if 2*set[index]-1 > 0:
+				horizontal_walls[2*set[index]-1] = 1
+				
+			horizontal_walls[2*set[index]] = 1
+			
+			if 2*set[index]+1 < horizontal_walls.size() - 1:
+				horizontal_walls[2*set[index]+1] = 1
+			set.remove_at(index)
 	
 	return horizontal_walls
 
@@ -125,7 +137,7 @@ func generateFirstRow() -> Array:
 	var cellRow = range(1,maze_size+1)
 	
 	var vertical_walls = create_vertical_walls(cellRow,sets)
-	var horizontal_walls = create_horizontal_walls(vertical_walls, sets)
+	var horizontal_walls = create_horizontal_walls(vertical_walls, sets, cellRow)
 	
 	maze.append(vertical_walls)
 	maze.append(horizontal_walls)
@@ -145,7 +157,7 @@ func generateRow(prev_cellRow: Array) -> Array:
 			cellRow[i] = maxSetNum
 	
 	var vertical_walls = create_vertical_walls(cellRow,sets)
-	var downWalls = create_horizontal_walls(vertical_walls,sets)
+	var downWalls = create_horizontal_walls(vertical_walls,sets, cellRow)
 
 	maze.append(vertical_walls)
 	maze.append(downWalls)
@@ -156,16 +168,16 @@ func generateRow(prev_cellRow: Array) -> Array:
 func generateLastRow(prev_cellRow: Array) -> Array:
 	#remove last row which is horizontal lines
 	maze.pop_back()
-	var cell1
-	var cell2
+	var cell_l
+	var cell_r
 	
 	for i in range(prev_cellRow.size()-1):
-		cell1 = prev_cellRow[i]
-		cell2 = prev_cellRow[i+1]
+		cell_l = prev_cellRow[i]
+		cell_r = prev_cellRow[i+1]
 
-		if cell1 != cell2:
+		if cell_l != cell_r:
 			maze.back()[2*i+1] = 0
-			merge_sets(prev_cellRow,cell1,cell2)
+			merge_sets(prev_cellRow,cell_l,cell_r)
 	
 	return prev_cellRow
 
@@ -218,7 +230,6 @@ func _process(delta: float) -> void:
 		clear_instances("Walls")
 		load_chunk()
 		tot_maze_generated += 1
-		print(tot_maze_generated)
 	
 	return
 
