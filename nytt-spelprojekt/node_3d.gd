@@ -1,13 +1,16 @@
 extends Node3D
 
+var rng = RandomNumberGenerator.new()
+
 var maze = []
 var maze_length_x = 0
 var maze_length_z = 0
 var maxSetNum = 9
 var maze_size = 9
-var rng = RandomNumberGenerator.new()
 var maze_center = Vector3(0,0,0)
+var old_maze_center = Vector3(1,0,0)
 var tot_maze_generated = 0
+
 var hedge = preload("res://hedge2.tscn")
 
 # Initiates an array of zeros, depending on the desired
@@ -108,18 +111,25 @@ func create_horizontal_walls(vertical_walls: Array, sets: Array, cellRow: Array)
 	for i in range(sets.size()):
 		var set = sets[i]
 		var max_walls = set.size() - 1
-		var num_walls = rng.randi_range(0, max_walls)
+		var num_walls = 0
 		
-		for j in range(0, num_walls):
+		for j in set.size():
 			var index = rng.randi_range(0, set.size() - 1)
+			var gen_wall = rng.randf_range(0.0,1.0)
 			
-			if 2*set[index]-1 > 0:
-				horizontal_walls[2*set[index]-1] = 1
+			if num_walls >= max_walls:
+				break
+			
+			if gen_wall > 0.5:
+				if 2*set[index]-1 > 0:
+					horizontal_walls[2*set[index]-1] = 1
+					
+				horizontal_walls[2*set[index]] = 1
+					
+				if 2*set[index]+1 < horizontal_walls.size() - 1:
+					horizontal_walls[2*set[index]+1] = 1
+				num_walls += 1
 				
-			horizontal_walls[2*set[index]] = 1
-			
-			if 2*set[index]+1 < horizontal_walls.size() - 1:
-				horizontal_walls[2*set[index]+1] = 1
 			set.remove_at(index)
 	
 	return horizontal_walls
@@ -189,14 +199,14 @@ func load_chunk() -> void:
 			if maze[z][x] == 1:
 				# Create new instance at position (x, 0, z)
 				var pos = Vector3(Vector3(x-maze_length_x/2+maze_center[0], 1, z-maze_length_z/2+maze_center[2]))
-				inst(pos) 
+				inst(pos, "2") 
 	return
 
 # Instatiates a copy of the object representing a wall
-func inst(pos: Vector3) -> void:
+func inst(pos: Vector3, a) -> void:
 	var instance = hedge.instantiate()
 	instance.position = pos
-	instance.add_to_group("Walls")
+	instance.add_to_group("Walls" + str(tot_maze_generated))
 	add_child(instance)
 	return
 
@@ -209,13 +219,8 @@ func clear_instances(group_name: String):
 func _ready() -> void:
 	
 	generateMaze()
+	load_chunk()
 	
-	for z in range(maze.size()):  # Loop over rows (z is the index for rows)
-		for x in range(maze[z].size()):  # Loop over columns (x is the index for columns)
-			if maze[z][x] == 1:
-				# Create new instance at position (x, 0, z)
-				var pos = Vector3(x-maze_length_x/2, 1, z-maze_length_z/2)
-				inst(pos) 
 	return
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -223,13 +228,17 @@ func _process(delta: float) -> void:
 	var charachter = $CharacterBody3D
 	var pos = Vector3(charachter.position)
 	
-	var old_maze_center = maze_center
+	var current_maze_center = maze_center
 	update_position(pos)
-	if old_maze_center != maze_center:
+	if current_maze_center != maze_center && current_maze_center != old_maze_center:
+		old_maze_center = current_maze_center
 		generateMaze()
-		clear_instances("Walls")
+		#clear_instances("Walls")
 		load_chunk()
 		tot_maze_generated += 1
+	
+	if abs(pos[0] - old_maze_center[0]) > maze_length_x:
+		clear_instances("Walls" + str(tot_maze_generated-1))
 	
 	return
 
