@@ -75,8 +75,6 @@ func generateMaze() -> void:
 		rand_x_u_opening = rand_x_d_opening
 		rand_x_d_opening = 2*rng.randi_range(0,8)+1
 		maze[0][rand_x_d_opening] = 0
-		
-		
 	elif maze_center.z > old_maze_center.z:
 		maze[0][rand_x_u_opening] = 0
 		rand_x_d_opening = rand_x_u_opening
@@ -85,8 +83,9 @@ func generateMaze() -> void:
 	else:
 		rand_x_u_opening = 2*rng.randi_range(0,8)+1
 		rand_x_d_opening = 2*rng.randi_range(0,8)+1
-		maze[0][rand_x_u_opening] = 0
-		maze[maze.size() - 1][rand_x_d_opening] = 0
+		maze[0][rand_x_d_opening] = 0
+		maze[maze.size() - 1][rand_x_u_opening] = 0
+	return
 
 # Helper function to generate a row which has vertical walls
 func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
