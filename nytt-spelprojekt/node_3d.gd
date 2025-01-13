@@ -1,13 +1,21 @@
 extends Node3D
 
+var rng = RandomNumberGenerator.new()
+
 var maze = []
 var maze_length_x = 0
 var maze_length_z = 0
 var maxSetNum = 9
 var maze_size = 9
-var rng = RandomNumberGenerator.new()
 var maze_center = Vector3(0,0,0)
+var old_maze_center = Vector3(0,1,0)
 var tot_maze_generated = 0
+var rand_z_l_opening = 2*rng.randi_range(0,8)+1
+var rand_z_r_opening = 2*rng.randi_range(0,8)+1
+
+var rand_x_u_opening = 2*rng.randi_range(0,8)+1
+var rand_x_d_opening = 2*rng.randi_range(0,8)+1
+
 var hedge = preload("res://hedge2.tscn")
 
 # Initiates an array of zeros, depending on the desired
@@ -27,7 +35,7 @@ func generateMaze() -> void:
 	#filler_row.fill(1)
 	#filler_row[filler_row.size()/2 - 1] = 0
 	#print(filler_row)
-	maze.append([1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1])
+	maze.append([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
 	#maze.append(filler_row)
 	var cellRow = generateFirstRow()
 	
@@ -40,14 +48,45 @@ func generateMaze() -> void:
 		maze[i].insert(0, 1)
 		maze[i].append(1)
 	
-	maze.append([1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1])
+	maze.append([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
 	maze_length_x = maze[0].size()-1
 	maze_length_z = maze.size()-1
 	
-	maze[maze.size()/2 - 1][0] = 0
-	maze[maze.size()/2- 1][maze[maze.size()/2].size()-1] = 0
+	#vi går åt vänster. Högra öppningen skall vara samma, vänstra skall genereras
+	if maze_center.x < old_maze_center.x:
+		maze[rand_z_l_opening][maze[rand_z_l_opening].size()-1] = 0
+		rand_z_r_opening = rand_z_l_opening
+		rand_z_l_opening = 2*rng.randi_range(0,8)+1
+		maze[rand_z_l_opening][0] = 0
+	elif maze_center.x > old_maze_center.x:
+		maze[rand_z_r_opening][0] = 0
+		rand_z_l_opening = rand_z_r_opening
+		rand_z_r_opening = 2*rng.randi_range(0,8)+1
+		maze[rand_z_r_opening][maze[rand_z_r_opening].size()-1] = 0
+	else:
+		rand_z_l_opening = 2*rng.randi_range(0,8)+1
+		rand_z_r_opening = 2*rng.randi_range(0,8)+1
+		maze[rand_z_l_opening][0] = 0
+		maze[rand_z_r_opening][maze[rand_z_r_opening].size()-1] = 0
 	
-	return
+	#vi går uppåt. Högra öppningen skall vara samma, vänstra skall genereras
+	if maze_center.z < old_maze_center.z:
+		maze[maze.size()-1][rand_x_d_opening] = 0
+		rand_x_u_opening = rand_x_d_opening
+		rand_x_d_opening = 2*rng.randi_range(0,8)+1
+		maze[0][rand_x_d_opening] = 0
+		
+		
+	elif maze_center.z > old_maze_center.z:
+		maze[0][rand_x_u_opening] = 0
+		rand_x_d_opening = rand_x_u_opening
+		rand_x_u_opening = 2*rng.randi_range(0,8)+1
+		maze[maze.size()-1][rand_x_u_opening] = 0
+	else:
+		rand_x_u_opening = 2*rng.randi_range(0,8)+1
+		rand_x_d_opening = 2*rng.randi_range(0,8)+1
+		maze[0][rand_x_u_opening] = 0
+		maze[maze.size() - 1][rand_x_d_opening] = 0
 
 # Helper function to generate a row which has vertical walls
 func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
@@ -104,22 +143,28 @@ func create_horizontal_walls(vertical_walls: Array, sets: Array, cellRow: Array)
 	for value in index_map.keys():
 		sets.append(index_map[value])
 	############################################################################
-	
 	for i in range(sets.size()):
 		var set = sets[i]
 		var max_walls = set.size() - 1
-		var num_walls = rng.randi_range(0, max_walls)
+		var num_walls = 0
 		
-		for j in range(0, num_walls):
+		for j in set.size():
 			var index = rng.randi_range(0, set.size() - 1)
+			var gen_wall = rng.randf_range(0.0,1.0)
 			
-			if 2*set[index]-1 > 0:
-				horizontal_walls[2*set[index]-1] = 1
+			if num_walls >= max_walls:
+				break
+			
+			if gen_wall > 0.5:
+				if 2*set[index]-1 > 0:
+					horizontal_walls[2*set[index]-1] = 1
+					
+				horizontal_walls[2*set[index]] = 1
+					
+				if 2*set[index]+1 < horizontal_walls.size() - 1:
+					horizontal_walls[2*set[index]+1] = 1
+				num_walls += 1
 				
-			horizontal_walls[2*set[index]] = 1
-			
-			if 2*set[index]+1 < horizontal_walls.size() - 1:
-				horizontal_walls[2*set[index]+1] = 1
 			set.remove_at(index)
 	
 	return horizontal_walls
@@ -196,7 +241,7 @@ func load_chunk() -> void:
 func inst(pos: Vector3) -> void:
 	var instance = hedge.instantiate()
 	instance.position = pos
-	instance.add_to_group("Walls")
+	instance.add_to_group("Walls" + str(tot_maze_generated))
 	add_child(instance)
 	return
 
@@ -209,13 +254,9 @@ func clear_instances(group_name: String):
 func _ready() -> void:
 	
 	generateMaze()
+	load_chunk()
+	tot_maze_generated += 1
 	
-	for z in range(maze.size()):  # Loop over rows (z is the index for rows)
-		for x in range(maze[z].size()):  # Loop over columns (x is the index for columns)
-			if maze[z][x] == 1:
-				# Create new instance at position (x, 0, z)
-				var pos = Vector3(x-maze_length_x/2, 1, z-maze_length_z/2)
-				inst(pos) 
 	return
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -223,14 +264,22 @@ func _process(delta: float) -> void:
 	var charachter = $CharacterBody3D
 	var pos = Vector3(charachter.position)
 	
-	var old_maze_center = maze_center
+	var current_maze_center = maze_center
 	update_position(pos)
-	if old_maze_center != maze_center:
+	if current_maze_center != maze_center && current_maze_center != old_maze_center:
+		old_maze_center = current_maze_center
 		generateMaze()
-		clear_instances("Walls")
+		clear_instances("Walls" + str(tot_maze_generated-2))
+		#clear_instances("Walls")
 		load_chunk()
 		tot_maze_generated += 1
+		
 	
+	if abs(pos[0] - old_maze_center[0]) > maze_length_x:
+		clear_instances("Walls" + str(tot_maze_generated-2))
+	if abs(pos[2] - old_maze_center[2]) > maze_length_z:
+		clear_instances("Walls" + str(tot_maze_generated-2))
+		
 	return
 
 # Called for each frame, updates the players position and changes
