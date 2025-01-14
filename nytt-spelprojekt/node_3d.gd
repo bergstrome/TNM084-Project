@@ -232,7 +232,7 @@ func load_chunk() -> void:
 		for x in range(maze[z].size()):  # Loop over columns (x is the index for columns)
 			if maze[z][x] == 1:
 				# Create new instance at position (x, 0, z)
-				var pos = Vector3(Vector3(x-maze_length_x/2+maze_center[0], 1, z-maze_length_z/2+maze_center[2]))
+				var pos = Vector3(Vector3(x-maze_length_x/2+maze_center[0], 0, z-maze_length_z/2+maze_center[2]))
 				inst(pos) 
 	return
 

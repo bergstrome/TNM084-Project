@@ -33,6 +33,8 @@ void fragment() {
 	if (! FRONT_FACING){
 		NORMAL = -NORMAL;
 	}
+	SPECULAR = 1.0;
+	
 }
 
 //void light() {
