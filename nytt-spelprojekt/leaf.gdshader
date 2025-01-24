@@ -34,7 +34,7 @@ void fragment() {
 		NORMAL = -NORMAL;
 	}
 	SPECULAR = 1.0;
-	
+
 }
 
 //void light() {

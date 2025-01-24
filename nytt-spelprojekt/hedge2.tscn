@@ -1,9 +1,18 @@
-[gd_scene load_steps=4 format=3 uid="uid://c6srho4rveqke"]
+[gd_scene load_steps=6 format=3 uid="uid://c6srho4rveqke"]
 
 [ext_resource type="PackedScene" uid="uid://chwjp3mu2es6b" path="res://hedge.tscn" id="1_pmabl"]
 [ext_resource type="ArrayMesh" uid="uid://dahkroevr0dtf" path="res://h2_mesh.res" id="2_ox3yi"]
+[ext_resource type="Shader" path="res://leaf.gdshader" id="2_vucvi"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y424r"]
+render_priority = 0
+shader = ExtResource("2_vucvi")
+shader_parameter/color = Vector3(0, 0.286, 0)
+shader_parameter/color2 = Vector3(0, 0.179, 0)
+shader_parameter/noiseScale = 20.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_l5dry"]
+material = SubResource("ShaderMaterial_y424r")
 
 [node name="Node3D" type="Node3D"]
 

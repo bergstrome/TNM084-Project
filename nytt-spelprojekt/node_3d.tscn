@@ -1,8 +1,7 @@
-[gd_scene load_steps=19 format=3 uid="uid://5731g867u3k"]
+[gd_scene load_steps=16 format=3 uid="uid://5731g867u3k"]
 
 [ext_resource type="Script" path="res://node_3d.gd" id="1_0pdpg"]
 [ext_resource type="Script" path="res://character_body_3d.gd" id="1_xvx2l"]
-[ext_resource type="Shader" path="res://gravel.gdshader" id="2_nfqgv"]
 [ext_resource type="PackedScene" uid="uid://c6srho4rveqke" path="res://hedge2.tscn" id="3_xwkn8"]
 [ext_resource type="Script" path="res://grid_container.gd" id="4_cqatk"]
 
@@ -19,31 +18,11 @@ sky = SubResource("Sky_ujkaq")
 tonemap_mode = 2
 glow_enabled = true
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_2gn6e"]
-noise_type = 0
-seed = 2
-frequency = 0.1516
-offset = Vector3(-382.98, 0, 0)
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_i635c"]
-width = 1000
-height = 1000
-noise = SubResource("FastNoiseLite_2gn6e")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_c1cup"]
-render_priority = 0
-shader = ExtResource("2_nfqgv")
-shader_parameter/base_color = Vector3(0, 0, 0)
-shader_parameter/highlight_color = Vector3(0.7, 0.7, 0.7)
-shader_parameter/dark_color = Vector3(0.3, 0.2, 0.2)
-shader_parameter/scale = 1.0
-shader_parameter/stone_size = 1.0
-shader_parameter/roughness = 0.8
-shader_parameter/metallic = 0.0
-shader_parameter/noise_texture = SubResource("NoiseTexture2D_i635c")
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_04pu0"]
+albedo_color = Color(0, 0, 0, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_uc3e3"]
-material = SubResource("ShaderMaterial_c1cup")
+material = SubResource("StandardMaterial3D_04pu0")
 
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_t6u5y"]
 data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
@@ -114,6 +93,7 @@ skeleton = NodePath("../..")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 359.043, 0)
 
 [node name="GridContainer" type="GridContainer" parent="."]
+visible = false
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("4_cqatk")
@@ -123,4 +103,4 @@ layout_mode = 2
 
 [node name="SubViewport" type="SubViewport" parent="GridContainer/SubViewportContainer"]
 handle_input_locally = false
-render_target_update_mode = 4
+render_target_update_mode = 0

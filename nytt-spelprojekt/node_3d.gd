@@ -10,6 +10,7 @@ var maze_size = 9
 var maze_center = Vector3(0,0,0)
 var old_maze_center = Vector3(0,1,0)
 var tot_maze_generated = 0
+
 var rand_z_l_opening = 2*rng.randi_range(0,8)+1
 var rand_z_r_opening = 2*rng.randi_range(0,8)+1
 
@@ -100,7 +101,7 @@ func create_vertical_walls(cellRow: Array,sets: Array) -> Array:
 		if cell_l == cell_r:
 			gen_wall = 1
 			same_set = true
-		if gen_wall > 0.5:
+		if gen_wall >= 0.5:
 			maze.back()[2*i + 1] = 1
 			vertical_walls[2*i + 1] = 1
 			
@@ -128,7 +129,7 @@ func create_horizontal_walls(vertical_walls: Array, sets: Array, cellRow: Array)
 	sets.clear()
 	var index_map = {}
 	
-	#ingen aning vad som sker här, tilldelar rätt index till rätt set
+	#ingen aning vad som sker här, tilldelar rätt index till rätt set på något sätt :)
 	############################################################################
 	# Group indexes of the same element
 	for i in range(cellRow.size()):
@@ -228,12 +229,15 @@ func generateLastRow(prev_cellRow: Array) -> Array:
 # Reads the new generated maze and calls inst() to instantiate
 # walls at desired places (all 1:s in the maze variable)
 func load_chunk() -> void:
+	var inst_count = 0
 	for z in range(maze.size()):  # Loop over rows (z is the index for rows)
 		for x in range(maze[z].size()):  # Loop over columns (x is the index for columns)
 			if maze[z][x] == 1:
 				# Create new instance at position (x, 0, z)
 				var pos = Vector3(Vector3(x-maze_length_x/2+maze_center[0], 0, z-maze_length_z/2+maze_center[2]))
 				inst(pos) 
+				inst_count += 1
+	print(inst_count)
 	return
 
 # Instatiates a copy of the object representing a wall
